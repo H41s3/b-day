@@ -522,17 +522,16 @@
         let analyser;
         let microphone;
         let isListening = false;
-        let blowThreshold = 1;
-        let lastBlowTime = 0;
+        let blowThreshold = 0.05;
         let canBlow = false;
-        let lastCheckTime = 0;
-        const BLOW_CHECK_INTERVAL = 10;
 
         wishButton.addEventListener('click', () => {
             wishButton.classList.add('hide');
             velas.classList.add('ready');
             setupMicrophone();
             canBlow = true;
+            micStatus.classList.add('active');
+            micStatus.textContent = 'Blow into your microphone! 🎂';
         });
 
         async function setupMicrophone() {
@@ -546,6 +545,7 @@
                 startListening();
             } catch (err) {
                 console.error('Error accessing microphone:', err);
+                micStatus.textContent = 'Error accessing microphone. Please allow microphone access and refresh the page.';
             }
         }
 
@@ -559,17 +559,13 @@
             function checkAudioLevel() {
                 if (!isListening || !canBlow) return;
 
-                const currentTime = Date.now();
-                if (currentTime - lastCheckTime < BLOW_CHECK_INTERVAL) {
-                    requestAnimationFrame(checkAudioLevel);
-                    return;
-                }
-                lastCheckTime = currentTime;
-
                 analyser.getByteFrequencyData(dataArray);
                 const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                
+                micStatus.textContent = `Audio level: ${Math.round(average * 100)}% - Blow into your microphone! 🎂`;
 
                 if (average > blowThreshold) {
+                    console.log('Blow detected!');
                     blowCandle();
                 }
 
@@ -623,8 +619,6 @@
                 });
             }, 250);
         }
-
-        setTimeout(setupMicrophone, 2000);
     </script>
 </body>
 
